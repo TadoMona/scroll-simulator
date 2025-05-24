@@ -1,12 +1,223 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>機率遊戲</title>
+  <title>Artale 墊卷模擬器</title>
+  <link rel="icon" href="resource/favicon.png" type="image/png">
+  <style>
+    body 
+    {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: rgb(42, 42, 42);
+    }
+    button 
+    {
+      border-radius: 12px;
+    }
+    h1 
+    {
+      margin-top: -10px;
+      font-size: 50px;
+      color: white;
+    }
+    .chance-buttons 
+    {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .chance-button 
+    {
+      width: 80px;
+      height: 80px;
+      border: 2px solid #333;
+      background-color: #eee;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .chance-button:hover 
+    {
+      background-color: #ddd;
+    }
+    .chance-button.selected 
+    {
+      background-color: #ffcba4;
+      border-color: #f4a460;
+      color: white;
+    }
+    .icon 
+    {
+      width: 40px;
+      height: 40px;
+    }
+    #currentChanceDisplay 
+    {
+      font-size: 20px;
+      font-weight: normal;
+      margin-bottom: 20px;
+      color: white;
+    }
+    #currentChanceDisplay .value
+    {
+      color: rgb(242, 192, 14); /* 黃色部分 */
+    }
+    #rollButton 
+    {
+      font-size: 20px;
+      padding: 6px 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    #rollButton:hover 
+    {
+      background-color: #bbb;
+    }
+    #result 
+    {
+      font-size: 24px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    #counter, #totals 
+    {
+      margin-top: 10px;
+      color: white;
+    }
+    #resetButton 
+    {
+      margin-top: 10px;
+      padding: 6px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #resetButton:hover 
+    {
+      background-color: #bbb;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>網頁啟用成功！</h1>
-  <p>這是未來機率遊戲的主畫面</p>
+  <h1>🍁Artale 墊卷模擬器</h1>
+
+  <div id="currentChanceDisplay">
+    <span style="color: white;">選擇機率：</span><span id="chanceValue" style="color: rgb(242,192,14);">60%</span>
+  </div>
+
+  <div class="chance-buttons">
+    <button class="chance-button" onclick="setChance(this, 10)">
+      <img src="resource/scroll10.png" class="icon">
+    </button>
+    <button class="chance-button selected" onclick="setChance(this, 60)">
+      <img src="resource/scroll60.png" class="icon">
+    </button>
+  </div>
+
+  <button id="rollButton" onclick="roll()">開墊！</button>
+  <hr style="width: 30%; margin: 20px auto; border: 1px solid #ccc;">
+  <div id="result"></div>
+  <div id="counter">連續成功：0 次，連續失敗：0 次</div>
+  <div id="totals">總成功：0 次，總失敗：0 次</div>
+  <button id="resetButton" onclick="resetStats()">重置</button>
+
+  <audio id="successSound" src="resource/ScrollSuccess.ogg" preload="auto"></audio>
+  <audio id="failSound" src="resource/ScrollFailed.ogg" preload="auto"></audio>
+  <audio id="buttonHoverSound" src="resource/ButtonHover.ogg" preload="auto"></audio>
+  <audio id="buttonClickSound" src="resource/ButtonClick.ogg" preload="auto"></audio>
+
+  <script>
+    let successStreak = 0;
+    let failStreak = 0;
+    let totalSuccess = 0;
+    let totalFail = 0;
+    let currentChance = 60;
+
+    function setChance(button, value) 
+    {
+      currentChance = value;
+
+      document.querySelectorAll('.chance-button').forEach(btn => { btn.classList.remove('selected'); });
+      button.classList.add('selected');
+
+      document.getElementById('chanceValue').textContent = `${currentChance}%`;
+    }
+
+    function roll() 
+    {
+      const rollButton = document.getElementById('rollButton');
+      rollButton.disabled = true;
+      rollButton.style.opacity = 0.6;
+      setTimeout(() => {
+        rollButton.disabled = false;
+        rollButton.style.opacity = 1;
+      }, 600); //冷卻時間600ms
+
+      const resultEl = document.getElementById('result');
+      const counterEl = document.getElementById('counter');
+      const totalsEl = document.getElementById('totals');
+
+      const rand = Math.random() * 100;
+
+      if (rand < currentChance) 
+      {
+        successStreak++;
+        failStreak = 0;
+        totalSuccess++;
+        resultEl.textContent = "✅卷軸閃爍了一下，神秘的力量傳到了道具身上。";
+        resultEl.style.color = "rgb(240, 161, 160)";
+        playSound("successSound");
+      } 
+      else 
+      {
+        failStreak++;
+        successStreak = 0;
+        totalFail++;
+        resultEl.textContent = "❌卷軸閃爍了一下，但道具沒有任何變化。";
+        resultEl.style.color = "rgb(240, 161, 160)";
+        playSound("failSound");
+      }
+
+      counterEl.textContent = `連續成功：${successStreak} 次，連續失敗：${failStreak} 次`;
+      totalsEl.textContent = `累計成功：${totalSuccess} 次，累計失敗：${totalFail} 次`;
+    }
+
+    function playSound(id) 
+    {
+      const original = document.getElementById(id);
+      if (!original) return;
+
+      const clone = original.cloneNode(true);
+      clone.play().catch((e) => { console.warn("播放音效失敗：", e); });
+    }
+
+    function resetStats() 
+    {
+      successStreak = 0;
+      failStreak = 0;
+      totalSuccess = 0;
+      totalFail = 0;
+      document.getElementById('counter').textContent = `連續成功：0 次，連續失敗：0 次`;
+      document.getElementById('totals').textContent = `累計成功：0 次，累計失敗：0 次`;
+      document.getElementById('result').textContent = "";
+    }
+
+    document.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("mouseenter", () => { playSound("buttonHoverSound"); });
+    });
+
+    document.querySelectorAll("button").forEach(btn => {
+      if (btn.id !== "rollButton") 
+      {
+        btn.addEventListener("click", () => { playSound("buttonClickSound"); });
+      }
+    });
+  </script>
 </body>
 </html>
