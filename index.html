@@ -66,7 +66,7 @@
     }
     #currentChanceDisplay .value
     {
-      color: rgb(242, 192, 14); /* 黃色部分 */
+      color: rgb(242, 192, 14);
     }
     #rollButton 
     {
@@ -127,6 +127,24 @@
   <div id="totals">累計成功：0 次，累計失敗：0 次</div>
   <button id="resetButton" onclick="resetStats()">重置</button>
 
+  <hr style="width: 30%; margin: 30px auto; border: 1px solid #ccc;">
+
+  <div id="settings" style="color: white; margin-top: 20px;">
+    <h3>🔧 進階設定</h3>
+
+    <label for="delayRange">點擊冷卻時間：
+      <input type="range" id="delayRange" min="100" max="600" step="50" value="600">
+      <span id="delayValue">600</span> ms
+    </label>
+    <br><br>
+
+    <label for="volumeRange">音效音量：
+      <input type="range" id="volumeRange" min="0" max="100" step="1" value="100">
+      <span id="volumeValue">100</span>%
+    </label>
+  </div>
+
+
   <audio id="successSound" src="resource/ScrollSuccess.ogg" preload="auto"></audio>
   <audio id="failSound" src="resource/ScrollFailed.ogg" preload="auto"></audio>
   <audio id="buttonHoverSound" src="resource/ButtonHover.ogg" preload="auto"></audio>
@@ -138,6 +156,9 @@
     let totalSuccess = 0;
     let totalFail = 0;
     let currentChance = 60;
+    let delayMs = 600;
+    let soundVolume = 1.0;
+
 
     function setChance(button, value) 
     {
@@ -157,7 +178,7 @@
       setTimeout(() => {
         rollButton.disabled = false;
         rollButton.style.opacity = 1;
-      }, 600); //冷卻時間600ms
+      }, delayMs);
 
       const resultEl = document.getElementById('result');
       const counterEl = document.getElementById('counter');
@@ -194,6 +215,7 @@
       if (!original) return;
 
       const clone = original.cloneNode(true);
+      clone.volume = soundVolume;
       clone.play().catch((e) => { console.warn("播放音效失敗：", e); });
     }
 
@@ -218,6 +240,18 @@
         btn.addEventListener("click", () => { playSound("buttonClickSound"); });
       }
     });
+
+    document.getElementById("delayRange").addEventListener("input", (e) => {
+      delayMs = parseInt(e.target.value);
+      document.getElementById("delayValue").textContent = delayMs;
+    });
+
+    document.getElementById("volumeRange").addEventListener("input", (e) => {
+      const vol = parseInt(e.target.value);
+      soundVolume = vol / 100;
+      document.getElementById("volumeValue").textContent = vol;
+    });
+
   </script>
 </body>
 </html>
